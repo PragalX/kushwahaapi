@@ -1,0 +1,9 @@
+{
+  "name": "student-result-api",
+  "version": "1.0.0",
+  "main": "api.js",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.5"
+  }
+}
