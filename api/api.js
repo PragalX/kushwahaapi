@@ -35,9 +35,11 @@ function parseStudentData(html, regNo) {
         student_name: $("#ContentPlaceHolder1_DataList1_StudentNameLabel_0").text().trim() || "N/A",
         college_name: $("#ContentPlaceHolder1_DataList1_CollegeNameLabel_0").text().trim() || "N/A",
         course_name: $("#ContentPlaceHolder1_DataList1_CourseLabel_0").text().trim() || "N/A",
+        theory_subjects: [],
+        practical_subjects: [],
+        semester_grades: {}
     };
 
-    data.theory_subjects = [];
     $("#ContentPlaceHolder1_GridView1 tr").slice(1).each((i, el) => {
         const cells = $(el).find("td");
         if (cells.length >= 7) {
@@ -53,7 +55,6 @@ function parseStudentData(html, regNo) {
         }
     });
 
-    data.practical_subjects = [];
     $("#ContentPlaceHolder1_GridView2 tr").slice(1).each((i, el) => {
         const cells = $(el).find("td");
         if (cells.length >= 7) {
@@ -70,13 +71,10 @@ function parseStudentData(html, regNo) {
     });
 
     data.sgpa = $("#ContentPlaceHolder1_DataList5_GROSSTHEORYTOTALLabel_0").text().trim() || "SGPA not found";
-
-    const semesterGrades = {};
+    const semesterKeys = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "Cur. CGPA"];
     $("#ContentPlaceHolder1_GridView3 tr:nth-child(2) td").each((index, cell) => {
-        const semesterKeys = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "Cur. CGPA"];
-        semesterGrades[semesterKeys[index]] = $(cell).text().trim() || "NA";
+        data.semester_grades[semesterKeys[index]] = $(cell).text().trim() || "NA";
     });
-    data.semester_grades = semesterGrades;
 
     data.remarks = $("#ContentPlaceHolder1_DataList3_remarkLabel_0").text().includes("FAIL:")
         ? `FAIL: ${$("#ContentPlaceHolder1_DataList3_remarkLabel_0").text().split("FAIL:")[1].trim()}`
@@ -104,8 +102,11 @@ module.exports = async (req, res) => {
         const pageContent = await fetchWithRetries(url);
         const result = parseStudentData(pageContent, currentRegNo);
 
-        if (result) results.push(result, { separator: "************************************" });
+        if (result) {
+            results.push(result, { separator: "************************************" });
+        }
     }
 
-    res.status(200).json(results);
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).send(JSON.stringify(results, null, 2)); // Formats output with 2-space indentation
 };
